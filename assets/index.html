@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专家文献检索工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .results-section {
+            grid-column: 1 / -1;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .results-table th {
+            background: #f5f5f5;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .results-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .paper-title {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .paper-title:hover {
+            text-decoration: underline;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-available {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-unknown {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .export-buttons button {
+            flex: 1;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 专家文献检索工具</h1>
+            <p>快速查询专家最近发表的学术论文</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- 查询表单 -->
+            <div class="card">
+                <h2>📝 查询信息</h2>
+                
+                <div class="alert alert-info" id="alert"></div>
+                
+                <form id="searchForm">
+                    <div class="form-group">
+                        <label for="author">作者名 *</label>
+                        <input type="text" id="author" name="author" 
+                               placeholder="例如: 张三 或 Zhang San" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="affiliation">机构名（可选）</label>
+                        <input type="text" id="affiliation" name="affiliation" 
+                               placeholder="例如: 北京大学 或 Peking University">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="months">查询范围（月）</label>
+                            <select id="months" name="months">
+                                <option value="3">最近3个月</option>
+                                <option value="6" selected>最近6个月</option>
+                                <option value="12">最近12个月</option>
+                                <option value="24">最近24个月</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="maxResults">最大结果数</label>
+                            <input type="number" id="maxResults" name="maxResults" 
+                                   value="100" min="10" max="500">
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">🔍 开始查询</button>
+                        <button type="reset" class="btn-secondary">清空</button>
+                    </div>
+                </form>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>正在查询中，请稍候...</p>
+                </div>
+            </div>
+            
+            <!-- 统计信息 -->
+            <div class="card">
+                <h2>📊 查询统计</h2>
+                <div class="stats" id="stats" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalPapers">0</div>
+                        <div class="stat-label">总论文数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="pdfAvailable">0</div>
+                        <div class="stat-label">可获取PDF</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="queryTime">0s</div>
+                        <div class="stat-label">查询耗时</div>
+                    </div>
+                </div>
+                <p style="color: #999; text-align: center; margin-top: 20px;">
+                    查询后显示统计信息
+                </p>
+            </div>
+            
+            <!-- 结果表格 -->
+            <div class="card results-section">
+                <h2>📚 查询结果</h2>
+                
+                <div id="noResults" style="text-align: center; color: #999; padding: 40px;">
+                    <p>暂无查询结果</p>
+                </div>
+                
+                <div id="resultsContainer" style="display: none;">
+                    <table class="results-table" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>标题</th>
+                                <th>PMID</th>
+                                <th>DOI</th>
+                                <th>发表日期</th>
+                                <th>期刊</th>
+                                <th>PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                        </tbody>
+                    </table>
+                    
+                    <div class="export-buttons">
+                        <button class="btn-primary" onclick="exportResults('csv')">📥 导出 CSV</button>
+                        <button class="btn-primary" onclick="exportResults('markdown')">📥 导出 Markdown</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentResults = [];
+        let queryStartTime = 0;
+        
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let author = document.getElementById('author').value.trim();
+            const affiliation = document.getElementById('affiliation').value.trim();
+            const months = document.getElementById('months').value;
+            const maxResults = document.getElementById('maxResults').value;
+            
+            if (!author) {
+                showAlert('请输入作者名', 'error');
+                return;
+            }
+            
+            // 直接发送原始输入，后端会处理中文转拼音
+            // 不做任何转换！
+            
+            queryStartTime = Date.now();
+            showLoading(true);
+            showAlert('正在查询 PubMed 数据库...', 'info');
+            
+            try {
+                // 调用真实的 API
+                await simulateSearch(author, affiliation, months, maxResults);
+            } catch (error) {
+                showAlert('查询失败: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        async function simulateSearch(author, affiliation, months, maxResults) {
+            // 调用真实的 API
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        author: author,
+                        affiliation: affiliation,
+                        months: parseInt(months),
+                        max_results: parseInt(maxResults)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showAlert('查询失败: ' + data.error, 'error');
+                    return;
+                }
+                
+                currentResults = data.papers || [];
+                displayResults(currentResults, author, affiliation, months);
+                
+                if (currentResults.length === 0) {
+                    showAlert('未找到相关论文，请检查作者名是否正确', 'info');
+                } else {
+                    showAlert(`✓ 查询完成！找到 ${currentResults.length} 篇论文`, 'success');
+                }
+                
+            } catch (error) {
+                showAlert('查询失败: ' + error.message, 'error');
+                console.error('API Error:', error);
+            }
+        }
+        
+        function displayResults(papers, author, affiliation, months) {
+            const queryTime = ((Date.now() - queryStartTime) / 1000).toFixed(1);
+            
+            // 更新统计
+            document.getElementById('totalPapers').textContent = papers.length;
+            document.getElementById('pdfAvailable').textContent = 
+                papers.filter(p => p.pdf_status === 'available').length;
+            document.getElementById('queryTime').textContent = queryTime + 's';
+            document.getElementById('stats').style.display = 'grid';
+            
+            // 显示结果表格
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            papers.forEach((paper, index) => {
+                const row = document.createElement('tr');
+                const doi = paper.doi && paper.doi !== 'N/A' ? paper.doi : '无';
+                const pdfLink = (paper.pdf_status === 'available' && paper.pdf_url && paper.pdf_url !== 'N/A') 
+                    ? `<a href="${paper.pdf_url}" target="_blank" style="color: #667eea;">下载</a>` 
+                    : '无';
+                
+                row.innerHTML = `
+                    <td>
+                        <a href="${paper.pubmed_url}" target="_blank" class="paper-title">
+                            ${paper.title}
+                        </a>
+                        <div style="font-size: 0.85em; color: #999; margin-top: 5px;">
+                            ${paper.authors.join(', ')}
+                        </div>
+                    </td>
+                    <td>${paper.pmid}</td>
+                    <td>${doi}</td>
+                    <td>${paper.pub_date}</td>
+                    <td>${paper.journal}</td>
+                    <td>${pdfLink}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
+            
+            showAlert(`✓ 查询完成！找到 ${papers.length} 篇论文`, 'success');
+        }
+        
+        function exportResults(format) {
+            if (currentResults.length === 0) {
+                showAlert('没有数据可导出', 'error');
+                return;
+            }
+            
+            let content = '';
+            let filename = '';
+            
+            if (format === 'csv') {
+                content = 'PMID,DOI,标题,作者,期刊,发表日期,PDF\n';
+                currentResults.forEach(paper => {
+                    const doi = paper.doi && paper.doi !== 'N/A' ? paper.doi : '无';
+                    const pdf = (paper.pdf_status === 'available' && paper.pdf_url && paper.pdf_url !== 'N/A') ? '有' : '无';
+                    content += `"${paper.pmid}","${doi}","${paper.title}","${paper.authors.join('; ')}","${paper.journal}","${paper.pub_date}","${pdf}"\n`;
+                });
+                filename = 'papers_' + new Date().toISOString().split('T')[0] + '.csv';
+            } else if (format === 'markdown') {
+                content = '# 专家文献检索报告\n\n';
+                content += `生成时间: ${new Date().toLocaleString()}\n\n`;
+                content += `## 文献列表 (共 ${currentResults.length} 篇)\n\n`;
+                
+                currentResults.forEach((paper, idx) => {
+                    const doi = paper.doi && paper.doi !== 'N/A' ? paper.doi : '无';
+                    const pdf = (paper.pdf_status === 'available' && paper.pdf_url && paper.pdf_url !== 'N/A') ? `[PDF](${paper.pdf_url})` : '无';
+                    content += `### ${idx + 1}. ${paper.title}\n\n`;
+                    content += `- **PMID**: ${paper.pmid}\n`;
+                    content += `- **DOI**: ${doi}\n`;
+                    content += `- **作者**: ${paper.authors.join(', ')}\n`;
+                    content += `- **期刊**: ${paper.journal}\n`;
+                    content += `- **发表日期**: ${paper.pub_date}\n`;
+                    content += `- **PDF**: ${pdf}\n\n`;
+                });
+                filename = 'papers_' + new Date().toISOString().split('T')[0] + '.md';
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showAlert(`✓ 已导出为 ${format.toUpperCase()}`, 'success');
+        }
+        
+        function downloadAllPDFs() {
+            const availablePDFs = currentResults.filter(p => p.pdf_status === 'available');
+            if (availablePDFs.length === 0) {
+                showAlert('没有可下载的 PDF', 'error');
+                return;
+            }
+            
+            showAlert(`准备下载 ${availablePDFs.length} 个 PDF...`, 'info');
+            availablePDFs.forEach((paper, index) => {
+                setTimeout(() => {
+                    const a = document.createElement('a');
+                    a.href = paper.pdf_url;
+                    a.download = `${paper.pmid}.pdf`;
+                    a.click();
+                }, index * 500);
+            });
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
