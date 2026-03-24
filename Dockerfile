@@ -13,11 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制项目文件
 COPY . .
 
-# 暴露端口
-EXPOSE 5000
+# 暴露端口（腾讯云默认检测 80）
+EXPOSE 80
 
 # 设置环境变量
-ENV PORT=5000
+ENV PORT=80
 ENV PYTHONUNBUFFERED=1
 
 # 启动命令
